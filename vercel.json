@@ -8,5 +8,18 @@
     ],
     "routes": [
       { "src": "/(.*)", "dest": "main.py" }
-    ]
+    ],
+    "functions": {
+      "api/**.py": {
+        "maxDuration": 10,
+        "memory": 512
+      }
+    },
+    "excludeFiles": [
+      "modelo_classificacao.pkl",
+      "data/**",
+      "notebooks/**",
+      "*.csv"
+  ]
+
 }

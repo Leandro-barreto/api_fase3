@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import joblib
-from .services.functions import read_uploaded_file, apply_model, render_result_table
+from ..services.functions import read_uploaded_file, apply_model, render_result_table
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")

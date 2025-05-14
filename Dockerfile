@@ -11,7 +11,7 @@ COPY . .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Expõe a porta da FastAPI (usando Uvicorn)
+# Expõe a porta da FastAPI (usando Uvicorn) 
 EXPOSE 8080
 
 # Comando de execução

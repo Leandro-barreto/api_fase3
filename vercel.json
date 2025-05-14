@@ -19,5 +19,5 @@
       "env": {
         "PIP_REQUIREMENTS_FILE": "requirements-prod.txt"
       }
-  }
+    }
 }

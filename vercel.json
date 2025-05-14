@@ -8,11 +8,5 @@
     ],
     "routes": [
       { "src": "/(.*)", "dest": "api/main.py" }
-    ],
-    "functions": {
-      "api/**.py": {
-        "maxDuration": 10,
-        "memory": 512
-      }
-    }
+    ]
 }

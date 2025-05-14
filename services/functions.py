@@ -15,7 +15,7 @@ def read_uploaded_file(file: UploadFile) -> pd.DataFrame:
 
 def apply_model(df: pd.DataFrame, model) -> pd.DataFrame:
     try:
-        predictions = model.predict(df)
+        predictions = model.predict(df.drop(columns='target'))
         df["predicao"] = predictions
         return df
     except Exception as e:

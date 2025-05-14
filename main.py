@@ -10,6 +10,11 @@ templates = Jinja2Templates(directory="templates")
 # Carregamento do modelo
 model = joblib.load("modelo_classificacao.pkl")
 
+
+@app.get("/", response_class=HTMLResponse)
+async def main_form(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload_file(request: Request, file: UploadFile = File(...)):
     try:

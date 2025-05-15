@@ -1,6 +1,13 @@
 # Base com Python
 FROM python:3.10-slim
 
+# Instala dependências do sistema (incluindo Java)
+RUN apt-get update && apt-get install -y openjdk-11-jdk && apt-get clean
+
+# Define o JAVA_HOME para o PySpark funcionar
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
 # Diretório de trabalho
 WORKDIR /app
 

@@ -106,7 +106,17 @@ def dataset_prep(df, feature_cols):
     dataset_prep = assembler.transform(df).select('id', 'features') 
     return dataset_prep
 
+def fill_missing_cols(df, feature_cols):
+    missing_cols = list(set(feature_cols) - set(df.columns))
+    for col in missing_cols:
+        df = df.withColumn(col, lit(0))
+    return df
+
 def create_feat_df(df):
+    feature_cols = ['CS', 'DE', 'IM', 'LP', 'PA', 'PB', 'C', 'D', 'G', 'T', 'EE', 'FA', 'GB', 'GT', 'MA',
+                    'MF', 'OP', 'OU', 'PL', 'QC', 'SC', 'SE', 'CD', 'CM', 'ME', 'MS', 'SM', 'SW',
+                    'meses_duracao_scaled', 'custo_total_scaled']
+    
     df = remove_cols(df)
     df = cast_types(df)
     df = renaming_cols(df)
@@ -114,19 +124,19 @@ def create_feat_df(df):
     df = one_hot_encoding_spark(df, cols_to_apply = ['cadeia_inovacao', 'segmento_setor', 'tema', 'produto'])
     df = df.fillna(0, subset=["meses_duracao", "custo_total"])
     df = scaling_numbers(df, cols_to_scale = ["meses_duracao", "custo_total"])
-    df = dataset_prep(df, feature_cols=['CS', 'DE', 'IM', 'LP', 'PA', 'PB', 'C', 'D', 'G', 'T', 'EE', 'FA', 'GB', 'GT', 'MA',
-                                        'MF', 'OP', 'OU', 'PL', 'QC', 'SC', 'SE', 'CD', 'CM', 'ME', 'MS', 'SM', 'SW',
-                                        'meses_duracao_scaled', 'custo_total_scaled'])
+    df = fill_missing_cols(df, feature_cols)
+    df = dataset_prep(df, feature_cols=feature_cols)
 
     return df
 
 def inference(df, model_path):
     df_id_cnpj = df.select(["_id", "NumCPFCNPJ"]) 
+    df = df.withColumn("NumCPFCNPJ", col("NumCPFCNPJ").cast(IntegerType()))
     df_id_cnpj = df_id_cnpj.withColumnRenamed('_id', 'id')
     df_features = create_feat_df(df)
     loaded_model = RandomForestClassificationModel.load(model_path)
     df_results = loaded_model.transform(df_features)
-    df_results = df_id_cnpj.join(df_results, on='id', how='inner')
+    df_results = df_id_cnpj.join(df_results, on='id', how='inner').toPandas()
     return df_results
 
 

@@ -1,13 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upload de Arquivo</title>
+    <title>Classificador Aneel</title>
+    <script>
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // impede o recarregamento padrão
+
+            const form = document.getElementById("uploadForm");
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Selecione um arquivo.");
+                return;
+            }
+
+            // Mostrar mensagem de loading
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "<h3>Rodando o modelo...</h3>";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const html = await response.text();
+                resultDiv.innerHTML = html;
+            } catch (err) {
+                resultDiv.innerHTML = "<h3>Erro ao enviar arquivo.</h3>";
+            }
+        }
+    </script>
 </head>
 <body>
-    <h2>Upload de arquivo CSV ou JSON</h2>
-    <form action="/upload" enctype="multipart/form-data" method="post">
-        <input name="file" type="file" accept=".csv,.json" required>
+    <h2>Classificação de Aprovação das Barragens</h2>
+    <form id="uploadForm" onsubmit="handleFormSubmit(event)">
+        <input type="file" name="file" id="fileInput" accept=".csv, .json" required />
         <button type="submit">Enviar</button>
     </form>
+    <h4>Obs.: Linhas com CNPJs inválidos são descartadas</h4>
+    <div id="result" style="margin-top: 20px;"></div>
 </body>
 </html>

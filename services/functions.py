@@ -32,7 +32,13 @@ def check_cols(df):
     if len(list_val) > 0:
         raise ValueError(f"Arquivo escolhido não contém as colunas corretas: {', '.join(list_val)}")
     return 0
-    
+
+def formatar_cnpj_serie(coluna):
+    return coluna.astype(str).str.zfill(14).str.replace(
+        r"(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})",
+        r"\1.\2.\3/\4-\5",
+        regex=True
+    )
 
 def read_uploaded_file(file: UploadFile) -> pd.DataFrame:
     contents = file.file.read()
@@ -40,22 +46,24 @@ def read_uploaded_file(file: UploadFile) -> pd.DataFrame:
 
     if filename.endswith(".csv"):
         df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
-        if 'Unnamed: 0' in df.columns:
-            df = df.drop(columns='Unnamed: 0')
     elif filename.endswith(".json"):
         df =  pd.read_json(io.StringIO(contents.decode("utf-8")))
     else:
         raise ValueError("Formato de arquivo não suportado. Use .csv ou .json.")
     
+    if 'Unnamed: 0' in df.columns:
+        df = df.drop(columns='Unnamed: 0')
     check_cols(df)
+    df = df[~df['NumCPFCNPJ'].isna()]
+    df['NumCPFCNPJ'] = df['NumCPFCNPJ'].astype(int)
+    df["NumCPFCNPJ"] = formatar_cnpj_serie(df["NumCPFCNPJ"])
     return df
 
 def apply_model(df: pd.DataFrame, model_path) -> pd.DataFrame:
     try:
         df_spark = spark.createDataFrame(df)
         df_results = inference.inference(df_spark, model_path)
-        df_results_pd = df_results.select('NumCPFCNPJ', 'probability', 'prediction').toPandas()
-        return df_results_pd
+        return df_results[['NumCPFCNPJ', 'probability', 'prediction']]
     except Exception as e:
         raise RuntimeError(f"Erro ao aplicar o modelo: {e}")
 

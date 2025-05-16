@@ -4,7 +4,7 @@ import io
 from pyspark.sql import SparkSession
 from services import inference
 
-spark = SparkSession.builder.appName("AneelData").config("spark.ui.showConsoleProgress", "true").getOrCreate()
+spark = SparkSession.builder.appName("AneelData").getOrCreate()
 
 def check_cols(df):
     cols_to_check = [
@@ -54,16 +54,13 @@ def read_uploaded_file(file: UploadFile) -> pd.DataFrame:
     if 'Unnamed: 0' in df.columns:
         df = df.drop(columns='Unnamed: 0')
     check_cols(df)
-    df = df[~df['NumCPFCNPJ'].isna()]
-    df['NumCPFCNPJ'] = df['NumCPFCNPJ'].astype(int)
-    df["NumCPFCNPJ"] = formatar_cnpj_serie(df["NumCPFCNPJ"])
     return df
 
 def apply_model(df: pd.DataFrame, model_path) -> pd.DataFrame:
     try:
         df_spark = spark.createDataFrame(df)
         df_results = inference.inference(df_spark, model_path)
-        return df_results[['NumCPFCNPJ', 'probability', 'prediction']]
+        return df_results[['id', 'probability', 'prediction']]
     except Exception as e:
         raise RuntimeError(f"Erro ao aplicar o modelo: {e}")
 

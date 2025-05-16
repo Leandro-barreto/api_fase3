@@ -15,7 +15,10 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 WORKDIR /app
 
 # Copia tudo
-COPY . .
+COPY app_infer/* .
+
+# Muda o diretório para /app/app_infer
+WORKDIR app_infer
 
 # Instala dependências
 RUN pip install --upgrade pip && \

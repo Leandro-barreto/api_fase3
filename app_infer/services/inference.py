@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import IntegerType, StringType
 from pyspark.ml.classification import RandomForestClassificationModel
 
-spark = SparkSession.builder.appName("AneelData").config("spark.ui.showConsoleProgress", "true").getOrCreate()
+spark = SparkSession.builder.appName("AneelData").getOrCreate()
 
 def remove_cols(df):
     colunas_para_remover = ["AnoCadastroPropostaProjeto",
@@ -130,13 +130,12 @@ def create_feat_df(df):
     return df
 
 def inference(df, model_path):
-    df_id_cnpj = df.select(["_id", "NumCPFCNPJ"]) 
-    df = df.withColumn("NumCPFCNPJ", col("NumCPFCNPJ").cast(IntegerType()))
-    df_id_cnpj = df_id_cnpj.withColumnRenamed('_id', 'id')
+    # df_id_cnpj = df.select(["_id", "NumCPFCNPJ"]) 
+    # df_id_cnpj = df_id_cnpj.withColumnRenamed('_id', 'id')
     df_features = create_feat_df(df)
     loaded_model = RandomForestClassificationModel.load(model_path)
     df_results = loaded_model.transform(df_features)
-    df_results = df_id_cnpj.join(df_results, on='id', how='inner').toPandas()
-    return df_results
+    # df_results = df_id_cnpj.join(df_results, on='id', how='inner').toPandas()
+    return df_results.toPandas()
 
 

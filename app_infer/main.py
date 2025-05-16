@@ -7,10 +7,6 @@ from services.functions import read_uploaded_file, apply_model, render_result_ta
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Carregamento do modelo
-model = joblib.load("modelo_classificacao.pkl")
-
-
 @app.get("/", response_class=HTMLResponse)
 async def main_form(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})

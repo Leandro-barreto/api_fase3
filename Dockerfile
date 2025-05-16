@@ -1,15 +1,5 @@
 # Base com Python
-FROM python:3.10-slim-bullseye
-
-# Instala o Java (necessário para PySpark)
-RUN apt-get update && \
-    apt-get install -y default-jre && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Define o JAVA_HOME para o PySpark
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
+FROM python:3.10-slim
 
 # Diretório de trabalho
 WORKDIR /app

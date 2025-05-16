@@ -19,7 +19,7 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
         return HTMLResponse(content=f"<h3>Erro ao ler o arquivo: {str(e)}</h3>", status_code=400)
 
     try:
-        df_with_preds = apply_model(df, model_path = 'model')
+        df_with_preds = apply_model(df, model_path = 'modelo_classificacao.pkl')
     except Exception as e:
         return HTMLResponse(content=f"<h3>{str(e)}</h3>", status_code=500)
 

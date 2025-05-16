@@ -1,10 +1,7 @@
 from fastapi import UploadFile
 import pandas as pd
 import io
-from pyspark.sql import SparkSession
 from services import inference
-
-spark = SparkSession.builder.appName("AneelData").getOrCreate()
 
 def check_cols(df):
     cols_to_check = [
@@ -14,7 +11,6 @@ def check_cols(df):
         'DscChamPEDEstrategico',
         'DscCodProjeto',
         'DscTituloProjeto',
-        'IdcSituacaoProjeto',
         'NomAgente',
         'NumCPFCNPJ',
         'QtdMesesDuracaoPrevista',
@@ -28,8 +24,11 @@ def check_cols(df):
         '_id'
         ]
     cols_df = df.columns.tolist()
-    list_val = list(set(cols_df) - set(cols_to_check))
+    if 'IdcSituacaoProjeto' in cols_df:
+        cols_df.remove('IdcSituacaoProjeto')
+    list_val = list(set(cols_to_check) - set(cols_df))
     if len(list_val) > 0:
+        print('Aqui')
         raise ValueError(f"Arquivo escolhido não contém as colunas corretas: {', '.join(list_val)}")
     return 0
 
@@ -53,14 +52,15 @@ def read_uploaded_file(file: UploadFile) -> pd.DataFrame:
     
     if 'Unnamed: 0' in df.columns:
         df = df.drop(columns='Unnamed: 0')
+    if 'IdcSituacaoProjeto' in df.columns:
+        df = df.drop(columns='IdcSituacaoProjeto')
     check_cols(df)
     return df
 
 def apply_model(df: pd.DataFrame, model_path) -> pd.DataFrame:
     try:
-        df_spark = spark.createDataFrame(df)
-        df_results = inference.inference(df_spark, model_path)
-        return df_results[['id', 'probability', 'prediction']]
+        df_results = inference.inference(df, model_path)
+        return df_results
     except Exception as e:
         raise RuntimeError(f"Erro ao aplicar o modelo: {e}")
 

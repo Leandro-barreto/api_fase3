@@ -15,7 +15,7 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 WORKDIR /app
 
 # Copia pasta aplicativos
-COPY app_infer/* .
+COPY app_infer/. .
 COPY fly.toml .
 COPY Dockerfile .
 

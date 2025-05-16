@@ -14,11 +14,10 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 # Diretório de trabalho
 WORKDIR /app
 
-# Copia tudo
+# Copia pasta aplicativos
 COPY app_infer/* .
-
-# Muda o diretório para /app/app_infer
-WORKDIR app_infer
+COPY fly.toml .
+COPY Dockerfile .
 
 # Instala dependências
 RUN pip install --upgrade pip && \

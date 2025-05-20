@@ -34,7 +34,8 @@ Acesse em: [http://localhost:8000](http://localhost:8000)
 ## 🚀 Deploy no Fly.io
 
 Foi realizado deploy em uma aplicação no Fly.io para acessar entrar em:
-[https://api-fase3.fly.dev/](hhttps://api-fase3.fly.dev/)
+
+[https://api-fase3.fly.dev/](https://api-fase3.fly.dev/)
 
 ## Requisitos
 

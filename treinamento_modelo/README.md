@@ -21,6 +21,32 @@ treinamento_modelo/
 └── main.py                     # Script principal
 ```
 
+## 📊 Desempenho do Modelo (Dados de Teste)
+
+### Métricas Globais
+
+| Métrica                | Valor   |
+|------------------------|---------|
+| Acurácia               | 0.7709  |
+| Precisão (ponderado)   | 0.7751  |
+| Recall (ponderado)     | 0.7709  |
+| F1 Score (ponderado)   | 0.7711  |
+| AUC-ROC                | 0.7732  |
+
+### Matriz de Confusão
+
+| Real \ Previsto | Sucesso | Falha |
+|-----------------|---------|-------|
+| **Sucesso**     |    70   |   25  |
+| **Falha**       |    16   |   68  |
+
+
+### Matriz de Correlação
+
+![Matriz de Correlação](assets/correlation_matrix.png)
+
+#### As métricas estão salvas na pasta assets.
+
 ## 🛠️ Como Executar
 
 ```python
@@ -30,5 +56,5 @@ python main.py
 ## Requisitos
 
 ```bash
-pip install pandas scikit-learn joblib
+pip install pandas scikit-learn joblib seaborn matplotlib
 ```

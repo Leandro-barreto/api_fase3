@@ -1,0 +1,7 @@
+{
+    "Acuracia": "0.9031",
+    "Precision (ponderado)": "0.9075",
+    "Recall (ponderado)": "0.9031",
+    "F1 (ponderado)": "0.9029",
+    "AUC-ROC": "0.9036"
+}

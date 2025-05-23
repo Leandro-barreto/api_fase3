@@ -1,141 +1,100 @@
+import pandas as pd
 import re
-from pyspark.sql import SparkSession
-from pyspark.ml.feature import MinMaxScaler, VectorAssembler
-from pyspark.sql.functions import col, udf, lit
-from pyspark.sql import DataFrame
-from pyspark.sql.types import IntegerType, StringType
-from pyspark.ml.classification import RandomForestClassificationModel
+import joblib
+from sklearn.preprocessing import MinMaxScaler
 
-spark = SparkSession.builder.appName("AneelData").getOrCreate()
-
+# 1. Remoção de colunas irrelevantes
 def remove_cols(df):
-    colunas_para_remover = ["AnoCadastroPropostaProjeto",
-                        "DatConclusaoProjeto",
-                        "DatGeracaoConjuntoDados",
-                        "DscChamPEDEstrategico",
-                        "DscCodProjeto",
-                        "NomAgente",
-                        "NumCPFCNPJ",
-                        "SigAgente",
-                        "VlrCustoTotalAuditado",
-                        "DscTituloProjeto"]
+    colunas_para_remover = [
+        "AnoCadastroPropostaProjeto", "DatConclusaoProjeto", "DatGeracaoConjuntoDados",
+        "DscChamPEDEstrategico", "DscCodProjeto", "NomAgente", "NumCPFCNPJ", "SigAgente",
+        "VlrCustoTotalAuditado", "DscTituloProjeto"
+    ]
+    return df.drop(columns=colunas_para_remover, errors="ignore")
 
-    df = df.drop(*colunas_para_remover)
-    return df
-
+# 2. Renomear colunas
 def renaming_cols(df):
-    df = df.withColumnRenamed("IdcSituacaoProjeto", "status")
-    df = df.withColumnRenamed("SigFasInovacaoProjeto", "cadeia_inovacao")
-    df = df.withColumnRenamed("SigSegmentoSetorEletrico", "segmento_setor")
-    df = df.withColumnRenamed("SigTemaProjeto", "tema")
-    df = df.withColumnRenamed("SigTipoProdutoProjeto", "produto")
-    df = df.withColumnRenamed("QtdMesesDuracaoPrevista", "meses_duracao")
-    df = df.withColumnRenamed("VlrCustoTotalPrevisto", "custo_total")
-    df = df.withColumnRenamed("_id", "id")
+    renomear = {
+        "IdcSituacaoProjeto": "status",
+        "SigFasInovacaoProjeto": "cadeia_inovacao",
+        "SigSegmentoSetorEletrico": "segmento_setor",
+        "SigTemaProjeto": "tema",
+        "SigTipoProdutoProjeto": "produto",
+        "QtdMesesDuracaoPrevista": "meses_duracao",
+        "VlrCustoTotalPrevisto": "custo_total",
+        "_id": "id"
+    }
+    return df.rename(columns=renomear)
+
+# 3. Conversão de tipos
+def cast_types(df):
+    df["meses_duracao"] = pd.to_numeric(df["meses_duracao"], errors="coerce").fillna(0).astype("float")
+    df["custo_total"] = pd.to_numeric(df["custo_total"], errors="coerce").fillna(0).astype("float")
+    df["id"] = pd.to_numeric(df["id"], errors="coerce").astype("Int64")
     return df
 
-def cast_types(df):
-    df = df.withColumn("VlrCustoTotalPrevisto", col("VlrCustoTotalPrevisto").cast(IntegerType()))
-    df = df.withColumn("QtdMesesDuracaoPrevista", col("QtdMesesDuracaoPrevista").cast(IntegerType()))
-    df = df.withColumn("_id", col("_id").cast(IntegerType()))
-    return df
+# 4. Limpeza de texto
+def normalize_text(text):
+    if pd.isnull(text):
+        return None
+    text = str(text).lower()
+    text = re.sub(r'[àáâãäå]', 'a', text)
+    text = re.sub(r'[èéêë]', 'e', text)
+    text = re.sub(r'[ìíîï]', 'i', text)
+    text = re.sub(r'[òóôõö]', 'o', text)
+    text = re.sub(r'[ùúûü]', 'u', text)
+    text = re.sub(r'[ç]', 'c', text)
+    text = re.sub(r'[ýÿ]', 'y', text)
+    text = re.sub(r'[ñ]', 'n', text)
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text.upper()
 
 def remove_special_chars(df):
-    def normalize_text(text):
-        if text is None:
-            return None
-        text = str(text)
-        text = re.sub(r'[àáâãäåÀÁÂÃÄÅ]', 'a', text)
-        text = re.sub(r'[èéêëÈÉÊË]', 'e', text)
-        text = re.sub(r'[ìíîïÌÍÎÏ]', 'i', text)
-        text = re.sub(r'[òóôõöòóôõöÒÓÔÕÖ]', 'o', text)
-        text = re.sub(r'[ùúûüÙÚÛÜ]', 'u', text)
-        text = re.sub(r'[çÇ]', 'c', text)
-        text = re.sub(r'[ýÿÝŸ]', 'y', text)
-        text = re.sub(r'[ñÑ]', 'n', text)
-        text = re.sub(r'[^\w\s]', '', text) # Remove apóstrofos e outros caracteres especiais
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'-+', '', text)
-        text = text.upper()
-        return text
-
-    normalize_udf = udf(normalize_text, StringType())
-    df = df.withColumn("status", normalize_udf(col("status")))
+    if "status" in df.columns:
+        df["status"] = df["status"].apply(normalize_text)
     return df
 
+# 5. One-hot encoding (igual ao treino)
+def one_hot_encoding(df, cols_to_encode):
+    return pd.get_dummies(df, columns=cols_to_encode, prefix_sep='_', dummy_na=False)
 
-def one_hot_encoding_spark(df: DataFrame, cols_to_apply: list) -> DataFrame:
-
-    for col in cols_to_apply:
-        pivot_df = df.groupBy('id').pivot(col).agg(lit(1)).na.fill(0)
-        distinct_values = pivot_df.columns
-        distinct_values.remove('id')
-        if 'null' in distinct_values:
-            distinct_values.remove('null')
-            pivot_df = pivot_df.drop('null')
-
-        df = df.join(pivot_df, 'id', how='inner')
-
-        # for val in distinct_values:
-        #     df = df.withColumnRenamed(val, f"{col}_{val}")
-        df = df.drop(col)
-
-    
+# 6. Normalização Min-Max
+def scaling_numbers(df, cols_to_scale):
+    scaler = MinMaxScaler()
+    df[cols_to_scale] = scaler.fit_transform(df[cols_to_scale])
     return df
 
-def scaling_numbers(df, cols_to_scale = ["meses_duracao", "custo_total"]):
-    for col in cols_to_scale:
-        # Vetoriza as colunas numéricas
-        assembler_meses = VectorAssembler(inputCols=[col], outputCol=f"{col}_vec")
-        df = assembler_meses.transform(df)
-
-        # Cria o scaler
-        scaler_meses = MinMaxScaler(inputCol=f"{col}_vec", outputCol=f"{col}_scaled")
-
-        # Aplica o scaler
-        scaler_model_meses = scaler_meses.fit(df)
-        df = scaler_model_meses.transform(df)
-
-        # Drop nas colunas criadas para fazer a transformação
-        df = df.drop(col, f"{col}_vec")
-
-    return  df
-
-def dataset_prep(df, feature_cols):
-    assembler = VectorAssembler(inputCols=feature_cols, outputCol='features')
-    dataset_prep = assembler.transform(df).select('id', 'features') 
-    return dataset_prep
-
+# 7. Garantir que todas as colunas esperadas existam
 def fill_missing_cols(df, feature_cols):
-    missing_cols = list(set(feature_cols) - set(df.columns))
-    for col in missing_cols:
-        df = df.withColumn(col, lit(0))
-    return df
+    for col in feature_cols:
+        if col not in df.columns:
+            df[col] = 0
+    return df[feature_cols]
 
-def create_feat_df(df):
-    feature_cols = ['CS', 'DE', 'IM', 'LP', 'PA', 'PB', 'C', 'D', 'G', 'T', 'EE', 'FA', 'GB', 'GT', 'MA',
-                    'MF', 'OP', 'OU', 'PL', 'QC', 'SC', 'SE', 'CD', 'CM', 'ME', 'MS', 'SM', 'SW',
-                    'meses_duracao_scaled', 'custo_total_scaled']
-    
+# 8. Pipeline de preparação de features para inferência
+def create_feat_df(df, feature_cols):
     df = remove_cols(df)
-    df = cast_types(df)
     df = renaming_cols(df)
+    df = cast_types(df)
     df = remove_special_chars(df)
-    df = one_hot_encoding_spark(df, cols_to_apply = ['cadeia_inovacao', 'segmento_setor', 'tema', 'produto'])
-    df = df.fillna(0, subset=["meses_duracao", "custo_total"])
-    df = scaling_numbers(df, cols_to_scale = ["meses_duracao", "custo_total"])
-    df = fill_missing_cols(df, feature_cols)
-    df = dataset_prep(df, feature_cols=feature_cols)
+    df = one_hot_encoding(df, ['cadeia_inovacao', 'segmento_setor', 'tema', 'produto'])
+    df = scaling_numbers(df, ["meses_duracao", "custo_total"])
+    df_feat = fill_missing_cols(df, feature_cols)
+    return df_feat, df.get("id", pd.Series(range(len(df))))
 
-    return df
+# 9. Função principal de inferência
+def inference(df: pd.DataFrame, model_path: str) -> pd.DataFrame:
+    model = joblib.load(model_path)
+    df_features, ids = create_feat_df(df, feature_cols=model.feature_names_in_)
+    # Previsão
+    preds = model.predict(df_features)
 
-def inference(df, model_path):
-    # df_id_cnpj = df.select(["_id", "NumCPFCNPJ"]) 
-    # df_id_cnpj = df_id_cnpj.withColumnRenamed('_id', 'id')
-    df_features = create_feat_df(df)
-    loaded_model = RandomForestClassificationModel.load(model_path)
-    df_results = loaded_model.transform(df_features)
-    # df_results = df_id_cnpj.join(df_results, on='id', how='inner').toPandas()
-    return df_results.toPandas()
+    # Probabilidade da classe 1 (sucesso)
+    probs = model.predict_proba(df_features)[:, 1]
 
-
+    # Retorno com colunas adicionais
+    df_result = df.copy()
+    df_result["predicao"] = preds
+    df_result["prob_sucesso"] = probs
+    return df_result[["_id", "predicao"]]

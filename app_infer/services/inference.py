@@ -97,4 +97,5 @@ def inference(df: pd.DataFrame, model_path: str) -> pd.DataFrame:
     df_result = df.copy()
     df_result["predicao"] = preds
     df_result["prob_sucesso"] = probs
-    return df_result[["_id", "predicao"]]
+    df_result['desc_new'] = df_result['DscTituloProjeto'].str[:500]
+    return df_result[["_id", "desc_new", "predicao"]]

@@ -58,7 +58,7 @@ treinamento_modelo/
 ## 🛠️ Como Executar
 
 ```python
-python main.py
+python pd_main.py
 ```
 
 ## Requisitos

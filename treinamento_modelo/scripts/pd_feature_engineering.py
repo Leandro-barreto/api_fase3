@@ -36,9 +36,10 @@ def renaming_cols(df):
 
 # 4. Conversão de tipos
 def cast_types(df):
-    df["meses_duracao"] = pd.to_numeric(df["meses_duracao"], errors="coerce").astype("Int64")
-    df["custo_total"] = pd.to_numeric(df["custo_total"], errors="coerce").astype("Int64")
-    df["id"] = pd.to_numeric(df["id"], errors="coerce").astype("Int64")
+    df["meses_duracao"] = df["meses_duracao"].astype(int)
+    df["custo_total"] = df["custo_total"].str.replace(",", ".")
+    df["custo_total"] = df["custo_total"].astype(float)
+    df["id"] = df["id"].astype(int)
     return df
 
 # 5. Normalizar caracteres
@@ -70,7 +71,9 @@ def remove_lines(df):
 
 # 7. One-hot encoding
 def one_hot_encoding(df, cols_to_encode):
-    return pd.get_dummies(df, columns=cols_to_encode, prefix_sep='_', dummy_na=False)
+    df = pd.get_dummies(df, columns=cols_to_encode, prefix_sep='_', dummy_na=False)
+    df = df.replace({True: 1, False: 0})
+    return df
 
 # 8. Escalonamento Min-Max
 def scaling_numbers(df, cols_to_scale):
@@ -91,18 +94,19 @@ def balancing_classes(df, target_col='status'):
 def dataset_prep(df):
     df = remove_cols(df)
     df = renaming_cols(df)
-    df = cast_types(df)
     df = remove_special_chars(df)
     df = remove_lines(df)
+    df = cast_types(df)
+    df = one_hot_encoding(df, cols_to_encode=['cadeia_inovacao', 'segmento_setor', 'tema', 'produto'])
 
     df['status'] = df['status'].map({"CONCLUIDO": 1, "CANCELADO": 0})
-    df = balancing_classes(df, target_col='status')
 
-    df = one_hot_encoding(df, cols_to_encode=['cadeia_inovacao', 'segmento_setor', 'tema', 'produto'])
     df = scaling_numbers(df, cols_to_scale=["meses_duracao", "custo_total"])
 
-    df = df.drop(columns=["id"], errors="ignore")  # opcional
+    df = df.drop(columns=["id"]) 
+    df = balancing_classes(df, target_col='status')
 
     X = df.drop(columns=["status"])
     y = df["status"]
+    print(f'Shape final do dataset: {df.shape}')
     return X, y

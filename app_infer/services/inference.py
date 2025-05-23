@@ -74,7 +74,6 @@ def fill_missing_cols(df, feature_cols):
 
 # 8. Pipeline de preparação de features para inferência
 def create_feat_df(df, feature_cols):
-
     df = remove_cols(df)
     df = renaming_cols(df)
     df = cast_types(df)
@@ -98,4 +97,4 @@ def inference(df: pd.DataFrame, model_path: str) -> pd.DataFrame:
     df_result = df.copy()
     df_result["predicao"] = preds
     df_result["prob_sucesso"] = probs
-    return df_result[["_id", "prob_sucesso", "predicao"]]
+    return df_result[["_id", "predicao"]]

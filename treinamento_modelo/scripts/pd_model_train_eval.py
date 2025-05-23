@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report, roc_auc_score
@@ -52,7 +52,7 @@ def calcula_mostra_matriz_confusao(y_true, y_pred, normalize=False, percentage=T
 def eval_model(model, X, y, tipo=""):
     y_pred = model.predict(X)
 
-    print("Random Forest Classifier")
+    print("Gradient Boosting Classifier")
     print("=" * 40)
     print(f"Dados de {tipo}")
     print("=" * 40)
@@ -83,29 +83,36 @@ def eval_model(model, X, y, tipo=""):
 
 
 def model_train(X_train, y_train):
-    rfc = RandomForestClassifier(random_state=8)
+    gbc = GradientBoostingClassifier(random_state=8)
 
-    param_grid = {
+    param_grid_gbc = {
         "n_estimators": [10, 20, 30],
-        "max_depth": [5, 10, 15]
+        "max_depth": [3, 5, 7],
+        "learning_rate": [0.05, 0.1, 0.2]
     }
 
-    cv = GridSearchCV(rfc, param_grid, cv=5, scoring='f1_weighted')
-    cv.fit(X_train, y_train)
-
-    return cv.best_estimator_
+    cv_gbc = GridSearchCV(
+        gbc,
+        param_grid_gbc,
+        cv=5,
+        scoring='f1_weighted'
+    )
+    cv_gbc.fit(X_train, y_train)
+    return cv_gbc.best_estimator_
 
 
 def model_save(df, label_col='label', model_path='model.pkl'):
     X = df.drop(columns=[label_col])
     y = df[label_col]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=8)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=8)
+    print('Divisão entre treino e teste:')
+    print(f'Treino {X_train.shape[0]}')
+    print(X_train)
+    print(f'Teste {X_test.shape[0]}')
     correlation_matrix(X_train)
 
     modelo = model_train(X_train, y_train)
-
-    eval_model(modelo, X_train, y_train, "Treino")
     eval_model(modelo, X_test, y_test, "Teste")
 
     joblib.dump(modelo, model_path)

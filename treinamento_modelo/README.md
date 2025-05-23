@@ -4,6 +4,18 @@ Este módulo realiza todo o pipeline de preparação, balanceamento, treinamento
 
 ## ⚙️ Funcionalidades
 
+### Análises exploratórias em:
+
+[Google Colab - Versão Pandas](https://colab.research.google.com/drive/18X2YVaqOE6n7Cl4u_2zDTZkC9JuG074X?authuser=1#scrollTo=0FcwcWdBZEjW)
+
+
+#### Drafts
+[Google Colab - Correlacao](https://colab.research.google.com/drive/1LD67yXIh8jI6Ud11uphKssuLfZHLpwW4?usp=sharing#scrollTo=Q2f4peVwuqbD)
+[Google Colab - 1a versão em spark](https://colab.research.google.com/drive/141FM9kSJkTK3R5O1_fUy3u1Nbw2cDkzA?usp=sharing#scrollTo=1sX6BYl598Wu)
+
+
+## ⚙️ Funcionalidades
+
 - Leitura dos dados da base SQLite
 - Limpeza, normalização e one-hot encoding
 - Balanceamento com undersampling
@@ -27,23 +39,19 @@ treinamento_modelo/
 
 | Métrica                | Valor   |
 |------------------------|---------|
-| Acurácia               | 0.7709  |
-| Precisão (ponderado)   | 0.7751  |
-| Recall (ponderado)     | 0.7709  |
-| F1 Score (ponderado)   | 0.7711  |
-| AUC-ROC                | 0.7732  |
+| Acurácia               | 0.8071  |
+| Precisão (ponderado)   | 0.8131  |
+| Recall (ponderado)     | 0.8071  |
+| F1 Score (ponderado)   | 0.8056  |
+| AUC-ROC                | 0.8045  |
 
 ### Matriz de Confusão
 
 | Real \ Previsto | Sucesso | Falha |
 |-----------------|---------|-------|
-| **Sucesso**     |    70   |   25  |
-| **Falha**       |    16   |   68  |
+| **Sucesso**     |    118  |   45  |
+| **Falha**       |    20   |   154 |
 
-
-### Matriz de Correlação
-
-![Matriz de Correlação](assets/correlation_matrix.png)
 
 #### As métricas estão salvas na pasta assets.
 

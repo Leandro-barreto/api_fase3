@@ -29,3 +29,8 @@ projeto/
 1. Execute a API de download: `download_api/`
 2. Treine o modelo com os dados: `treinamento_modelo/`
 3. Suba a aplicação de inferência: `app_infer/`
+
+## Arquivos auxiliares
+
+1. Os dicionário de dados está em dd-projetos-de-pd-em-energia-eletrica.pdf
+2. Os arquivos aneel.csv, aneel.json e aneel_min.json, são arquivos para subir na aplicação de inferência
